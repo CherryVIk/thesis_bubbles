@@ -13,9 +13,6 @@ centerRx = [0 0 0];
 angles = -90:2:90;
 % Number of beams
 NBeams = length(angles);
-
-% filename = 'MyAnimation.gif';
-% for move_ii = 100
 %% Signal Parameters
 % Sample frequency
 fs = 192000;
@@ -80,10 +77,7 @@ if strcmp(eSignalType, eSignalTypes.blNoise)
     % Generate Gaussian white noise
     tx = randn(nSig, NTx);
     % an amplitude for that noise is 10% of the noise-free signal at every element.
-     % noise_add = 
-   
     tx = filter(Hd, tx);
-    % tx = tx + noise_add;
     %tx = filtfilt(Hd.sosMatrix, Hd.ScaleValues, tx);
     % Transform time to freq. domain signal
     Tx = fft(tx, NFFT);%NFFT
@@ -192,12 +186,8 @@ for iTx = 1:NTx
             mixed_resp = mixed_resp(1:nSig);
 %             idea: to add phase shift (imag part of the Tx to the mixed
 %             freq resp)
-%           rx(iStart:iEnd, iRx) = rx(iStart:iEnd, iRx) + tx(1:nSig, iTx);
             rx(iStart:iEnd, iRx) = rx(iStart:iEnd, iRx) + mixed_resp(1:nSig, iTx);
-
-            
-
-%% Insert custom freq. response here!   
+  
 % As of now, the transmission signal is simply added to the receive signal
 % but as the reflection at the object happens, in the time domain, the transmit sequence is
 % convolved with the impulse response of the target. In the
@@ -255,23 +245,6 @@ f_sigma_bs = abs(Tx(:, iTx)).*sigma_bs(1:NBins);
 res_temp = f_sigma_bs./abs(Tx(:, iTx));
 
 fig=figure;
-% subplot(211);
-logBs = 10*log10(sigma_bs(1:NBins,1));
-% plot(-f(1:end/2+1), logBs);
-xlim([0 f(end)])
-ylim([-100 0])
-hold on
-logRes_s = 10*log10(res_temp(1:NBins,1));
-plot(-f(1:NBins), logRes_s);
-title("Bubble response, log spectrum");
-subtitle("r = " + str_radius + " m")
-xlabel("Frequency, Hz");ylabel("Magnitude, dB")
-grid on;
-best_plot_ever(fig)
-
-%% subplot(212);
-
-fig=figure;
 logFs = 10*log10(abs(f_sigma_bs(:,1))./max(abs(f_sigma_bs(:,1))));
 hold on
 plot(-f(1:NBins),logFs)
@@ -291,15 +264,6 @@ best_plot_ever(fig)
 Y = fft(rx, NFFT);
 Y = Y(1:NBins, :);
 
-% subplot(211); % time domain plot
-% fig=figure;
-% plot(tSim, rx(:, 1));
-% grid on;
-% title('Received, time domain signal');
-% xlabel("Time, s");ylabel("Amplitude")
-% best_plot_ever(fig)
-
-% subplot(212)
 fig=figure;
 logRx_withB = 20*log10(abs(Y(:,1))./max(abs(Y(:,1))));
 plot(-f(1:NBins), logRx_withB(:, 1));
@@ -311,18 +275,9 @@ best_plot_ever(fig)
 % saveas(gca, "thesis_pics/single_mov_received_50kHz_spectrum_noise_r"+str_radius,"png");
 
 %% Reconstruction of the signal of before the correlation
-
-% [~,ff_s] = min(abs(f-Fstop1));
-% [~,ff_e] = min(abs(f-Fstop2));
-% ff_s = ff_s - NBins;
-% ff_e = ff_e - NBins;
-
-% H_hat(ff_s:ff_e) = abs(Y(ff_s:ff_e,1)) ./ abs(Tx(ff_s:ff_e,1));
 Y = Y.*hamming(length(Y));
 H_hat = abs(Y(:,1)) ./ abs(Tx(:,1));
-% H_hat = H_hat.*hamming(length(H_hat));
-% H_hat = abs(H_hat);
-% subplot(313)
+
 fig=figure;
 f_half =  -f(1:NBins);
 
@@ -523,23 +478,6 @@ hold off;
 best_plot_ever(sonar_fig)
 set(gca,'FontSize',12)
 % saveas(gca, "thesis_pics/single_mov_sonarFig_50kHz_r"+num2str(radius_b),"png");
-
-%% Functions
-function make_gif(Frame, ii, filename)
-    im = frame2im(Frame); 
-    [imind, CM] = rgb2ind(im,256); 
-    % Write the animation to the gif File: MYGIF 
-    if ii == 0 
-      imwrite(imind, CM,filename,'gif', 'Loopcount',inf); 
-    else 
-      imwrite(imind, CM,filename,'gif','WriteMode','append'); 
-    end 
-end
-
-% Capture the plot as an image 
-% Frame = getframe(sonar_fig);
-% make_gif(Frame, move_ii, filename)
-% end
 
 %% Functions
 function f_res = minnaert_freq(R0)

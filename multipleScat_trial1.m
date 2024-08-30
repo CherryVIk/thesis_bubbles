@@ -31,7 +31,7 @@ fMax = fC + fB/2;
 tPing = 1.0; % in seconds
 nPing = tPing * fs; % in samples
 % Signal duration
-tSig = 0.01; % in seconds
+tSig = 0.05; % in seconds
 nSig = tSig * fs; % in samples
 t = linspace(0, tSig, nSig);
 % Signal types
@@ -114,10 +114,9 @@ end
 %% Bubble environment settings
 %  source location constrains a, b
 x_lims=[-0.1 0.1];
-y_lims=[20 20.2];
-% y_lims=[1.2 1.4];
-z_lims=[0 1];
-Nbubbles=50;
+y_lims=[1.2 1.4];% y_lims=[1.2 1.4];
+z_lims=[0 0];
+Nbubbles=30;
 bubbleOsc_lims = [-0.1,0.1];
 % minRadius = 1000e-6;
 % minAllowableDistance = max([585e-6, 2 * maxRadius]);
@@ -148,38 +147,27 @@ str_radius = num2str(radius_std);
 str_radius = strrep(str_radius, '.', ',');
 radius_mean = 8e-5;   % r= 8e-5 resonances in the 30-70 kHz
 % radius_std = 0.8e-5;
-a_range = radius_mean + radius_std.*randn(1,NTargets);                    %stochastic distribution
-% a_range = radius_std*ones(1,NTargets);
+% a_range = radius_mean + radius_std.*randn(1,NTargets);                    %stochastic distribution
+a_range = radius_std*ones(1,NTargets);
 
 %% Plot bubbles in 2D
 x = posTar(:,1);
 y = posTar(:,2);
 z = posTar(:,3);
-bubbles_mov = figure;
-% hold on
-plot3(x,y,z, '-ok',"MarkerEdgeColor" ,	"#4DBEEE")
-axis_x = x_lims+bubbleOsc_lims*time_end*bubbleVelocity;
-axis_y = y_lims+bubbleOsc_lims*time_end*bubbleVelocity;
-axis([axis_x   axis_y     0 time_end*bubbleVelocity])
-axis equal
-grid on
-view([0  90])
-% refreshdata
-% drawnow
-% Frame = getframe(bubbles_mov);
-% make_gif(Frame, time_step, "Bubble_mov2.gif");
 %% Draw circles of different radii
-% n=NTargets;
-% R=radius_std*ones(n,1)*40;
-% P=[0:0.1:2*pi 0];
-% xr=R.*cos(P);
-% yr=R.*sin(P);
-% X_C=bsxfun(@plus,x,xr);
-% Y_C=bsxfun(@plus,y,yr);
-% fig = figure;
-% plot(X_C',Y_C','b')
-% xlabel('X');ylabel('Y')
-% axis equal
+n=NTargets;
+R=radius_std*ones(n,1)*40;
+P=[0:0.1:2*pi 0];
+xr=R.*cos(P);
+yr=R.*sin(P);
+X_C=bsxfun(@plus,x,xr);
+Y_C=bsxfun(@plus,y,yr);
+fig = figure;
+plot(X_C',Y_C','b')
+xlim(x_lims);
+ylim(y_lims);
+xlabel('X');ylabel('Y')
+axis equal
 % saveas(gca, "thesis_pics/bubbles_plot_2D","png")
 %% SONAR-sytem element positions (line arrays)
 % Uniform line array element equidistant element spacing 
@@ -241,7 +229,7 @@ rx_multi = zeros(nRxSeqLength, NRx);
 noise_level_dB = -65;
 noise_level_linear = 10^(noise_level_dB/10);
 noise_add = randn(nRxSeqLength, NRx) * noise_level_linear; 
-% rx = rx + noise_add; rx_multi = rx_multi + noise_add;
+rx = rx + noise_add; rx_multi = rx_multi + noise_add;
 
 %% Bubbles freq. response 
 sigma_bs = bubble_response_model(f,a_range,1);
@@ -251,6 +239,7 @@ mixedResponsesFreq_init = f_sigma_bs.*exp(i*theta);
 mixedResponsesTime_init = ifft(mixedResponsesFreq_init, NFFT,'symmetric');
 mixedResponsesTime_init = mixedResponsesTime_init(1:nSig,:);
 %% 
+logFs = 20*log10(abs(f_sigma_bs(:,:))./max(abs(f_sigma_bs(:,:))));
 % Plot --------------------------------------------------------------------
 % fig = figure; 
 % subplot(211);
@@ -309,28 +298,30 @@ f_half =  -f(1:NBins);
 [~, ffmin] = min(abs(f_half-fMin));
 [~, ffmax] = min(abs(f_half-fMax));
 
+Y = Y.*hamming(length(Y));
 H_hat = abs(Y(:,10)) ./ abs(Tx(:,1));
-H_hat = H_hat.*hamming(length(H_hat));
+
+Y_multi = Y_multi.*hamming(length(Y_multi));
 H_multi_hat = abs(Y_multi(:,10)) ./ abs(Tx(:,1));
-H_multi_hat = H_multi_hat.*hamming(length(H_multi_hat));
+
 
 % H_hat(ffmin:ffmax) = abs(Y(ffmin:ffmax,10)) ./ abs(Tx(ffmin:ffmax,1));
 % H_multi_hat(ffmin:ffmax) = abs(Y_multi(ffmin:ffmax,10)) ./ abs(Tx(ffmin:ffmax,1));
 
 % 
-% fig=figure;
-% % subplot(211)
-% plot(-f(1:NBins), 10*log10(abs(H_hat(:,1))./max(abs(H_hat(ffmax:ffmin,1)))),'LineWidth', 1.5);
-% hold on
-% plot(-f(1:NBins), 10*log10(abs(H_multi_hat(:,1))./max(abs(H_multi_hat(ffmax:ffmin,1)))));
-% legend("$\hat{H}$", "$\hat{H}_{\mathrm{multi}}$")
-% xlabel('Frequency (Hz)');ylabel('Magnitude, dB'); 
-% % xlim([f_half(ffmin) f_half(ffmax)])
-% best_plot_ever(fig)
-% saveas(gca, "thesis_pics/multi_scat_50kHz_r"+str_radius+"_Hhat_norm_comparison","png");
-
 fig=figure;
 % subplot(211)
+plot(-f(1:NBins), 10*log10(abs(H_hat(:,1))./max(abs(H_hat(ffmax:ffmin,1)))),'LineWidth', 1.5);
+hold on
+plot(-f(1:NBins), 10*log10(abs(H_multi_hat(:,1))./max(abs(H_multi_hat(ffmax:ffmin,1)))));
+legend("$\hat{H}$", "$\hat{H}_{\mathrm{multi}}$")
+xlabel('Frequency (Hz)');ylabel('Magnitude, dB'); 
+% xlim([f_half(ffmin) f_half(ffmax)])
+best_plot_ever(fig)
+% saveas(gca, "thesis_pics/multi_scat_50kHz_r"+str_radius+"_Hhat_norm_comparison","png");
+saveas(gca, "thesis_pics/multi_scat_50kHz+noise_r"+str_radius+"_Hhat_norm_comparison","png");
+
+fig=figure;
 plot(-f(1:NBins),abs(H_hat),'LineWidth', 1.5);
 hold on
 plot(-f(1:NBins), abs(H_multi_hat),'-');
@@ -339,20 +330,7 @@ xlabel('Frequency (Hz)'); ylabel('Amplitude');
 % xlim([f_half(ffmin) f_half(ffmax)])
 best_plot_ever(fig)
 % saveas(gca, "thesis_pics/multi_scat_50kHz_r"+str_radius+"_Hhat_amplitude_comparison","png");
-%% Interval amplitude plots H_hat
-
-% (ffmin:ffmax) 
-% fig=figure;
-% % subplot(211)
-% % plot(-f(ffmin:ffmax) , 20*log10(abs(H_hat(:,1))./max(abs(H_hat(ffmin:ffmax) ))),'LineWidth', 1.5);
-% hold on
-% % ranged_H_hat = 20*log10(abs(H_multi_hat(:,1))./max(abs(H_multi_hat(ffmin:ffmax) )));
-% % plot(-f(1:NBins), ranged_H_hat);
-% legend("$H_{hat}$", "$H_{multi hat}$")
-% xlabel('Frequency (Hz)');
-% best_plot_ever(fig)
-% saveas(gca, "thesis_pics/multi_scat_50kHz_r"+str_radius+"_Hhat_norm_comparison","png");
-
+saveas(gca, "thesis_pics/multi_scat_50kHz+noise_r"+str_radius+"_Hhat_amplitude_comparison","png");
 
 %% Apply damping: 1/r (linear), 1/r^2 (cylindrical), 1/r^3 (spherical)
 propagationTimesPerSample = (0:nRxSeqLength)./ fs;
@@ -464,60 +442,57 @@ for iResize = NResized:-1:1
 end
 %% Reconstruction of the correlated signal
 Y = Mf;
+Y = Y.*hamming(length(Y));
 H_hat = abs(Y(:,round(NRx/2))) ./ abs(Tx(:,1));
-% H_hat = H_hat.*hamming(length(H_hat));
+
 % Normalize to max
 logH_hat = 20*log10(abs(H_hat(:,1))./max(abs(H_hat(:,1))));
 
 Y_multi = Mf_multi;
+Y_multi = Y_multi.*hamming(length(Y_multi));
 H_hat_multi = abs(Y_multi(:,round(NRx/2))) ./ abs(Tx(:,1));
-% H_hat_multi = H_hat_multi.*hamming(length(H_hat_multi));
+
 % Normalize to max
 logH_hat_multi = 20*log10(abs(H_hat_multi(:,1))./max(abs(H_hat_multi(:,1))));
 
 f = linspace(-fs/2, fs/2, NFFT);
 f_half =  -f(1:NBins);
-
+sigma_bs = bubble_response_model(f,a_range,1);
 logBs = 10*log10(sigma_bs(1:NBins,1));
+logTx_noB = 20*log10(abs(Tx(:,1))./max(abs(Tx(:,1))));
+logRx_withB = 20*log10(abs(Y(:,1))./max(abs(Y(:,1))));
+logRx_multi_withB = 20*log10(abs(Y_multi(:,1))./max(abs(Y_multi(:,1))));
 
-f = linspace(-fs/2, fs/2, NFFT);
 fig=figure;
 subplot(311)
-% logRx_noB = X(:,1);
-logTx_noB = 20*log10(abs(Tx(:,1))./max(abs(Tx(:,1))));
-plot(-f(1:NBins), logTx_noB(:, 1));
+plot(f_half, logTx_noB(:, 1));
 ylim([-100 0])
 grid on;
 title('Transmitted, spectrum');
 best_plot_ever(fig)
 
 subplot(312)
-% logRx_withB = Y(:,1);
-logRx_withB = 20*log10(abs(Y(:,1))./max(abs(Y(:,1))));
-logRx_multi_withB = 20*log10(abs(Y_multi(:,1))./max(abs(Y_multi(:,1))));
-plot(-f(1:NBins), logRx_withB(:, 1));
+plot(f_half, logRx_withB(:, 1));
 ylim([-100 0])
 grid on;
 hold on
-% plot(-f(1:NBins), logRx_multi_withB(:, 1));
 title('Received correlated, spectrum');
 ylabel('Magnitude, dB')
 best_plot_ever(fig)
 
 subplot(313)
-
 hold on
 % plot(2*pi/c*-f(1:NBins)*radius_std, logH_hat(:, 1));
-plot(-f(1:NBins), logH_hat);
-% plot(-f(1:NBins), logH_hat_multi);
-plot(-f(1:NBins), logBs, '-.','LineWidth',1.5);
+% plot(f_half, logH_hat_multi);
+plot(f_half, logH_hat);
+plot(f_half, logBs, '-.','LineWidth',1.5);
 ylim([-100 0])
 legend("reconstruction", "bubble", 'Location','best')
 title('Reconstructed correlated, spectrum');
 xlabel('Frequency (Hz)');
 best_plot_ever(fig)
 % saveas(gca, "thesis_pics/multi_scat_50kHz_r"+str_radius+"_reconstruct","png");
-% saveas(gca, "thesis_pics/multi_scat_reconstr_corr-set_50kHz_r"+num2str(radius_b),"png");
+saveas(gca, "thesis_pics/multi_scat_reconstr+noise_corr-set_50kHz_r"+str_radius,"png");
 
 
 %% Plot results as PPI (plan position indicator) plot
@@ -576,14 +551,3 @@ function posTar = set_bubble_flare(x_lims, y_lims, z_lims, Nbubbles, bubbleVeloc
         end
     end
 end
-function make_gif(Frame, ii, filename)
-    im = frame2im(Frame); 
-    [imind, CM] = rgb2ind(im,256); 
-    % Write the animation to the gif File: MYGIF 
-    if ii == 1 
-      imwrite(imind, CM,filename,'gif', 'Loopcount',inf); 
-    else 
-      imwrite(imind, CM,filename,'gif','WriteMode','append'); 
-    end 
-end
-
