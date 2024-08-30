@@ -2,15 +2,9 @@
 % It is a description of the available code in this folder.
 %
 %
-% models_trial := to check how different models work in a small environment
-%                 for single bubbles as well as fo multiple
-%
-% reconstruction_check1 := to have an idea how reconstruction works and test
-%                         it in small environment
+% models_trial := to check how different single bubble models work (Anderson, Thuraisingham)
 % 
 % multipleScat_trial1 := has an implementation of the scattering 
-%
-% sonar_equation := doesn't has any simulation, a dead code
 %
 % sonar_multiple_t1 := multiple bubbles implementation
 %
