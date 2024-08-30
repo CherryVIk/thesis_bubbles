@@ -14,16 +14,16 @@ angles = -90:2:90;
 % Number of beams
 NBeams = length(angles);
 time_end = 1;
-bubbleTime = 0.2; % can be assumed as 0.1s
-bubbleVelocity = 1/bubbleTime; % v = 1m / 0.1s;
+bubbleTime = 3; % can be assumed as 0.1s
+bubbleVelocity = 1.6/bubbleTime; % v = 1m / 0.1s;
 for time_step = 1%:time_end 
 %% Signal Parameters
 % Sample frequency
 fs = 192000;
 % Signal bandwidth
-fB = 20000;
+fB = 40000;
 % Center frequency
-fC = 85000;
+fC = 50000;
 % Min & max frequencies
 fMin = fC - fB/2;
 fMax = fC + fB/2;
@@ -31,7 +31,7 @@ fMax = fC + fB/2;
 tPing = 1.0; % in seconds
 nPing = tPing * fs; % in samples
 % Signal duration
-tSig = 0.05; % in seconds
+tSig = 0.01; % in seconds, 0.05 test, 0.01 experiment
 nSig = tSig * fs; % in samples
 t = linspace(0, tSig, nSig);
 % Signal types
@@ -105,14 +105,14 @@ best_plot_ever(t, tx(:,1),"Time domain signal", fig)
 subplot(212);
 logTx = 20*log10(abs(Tx(:,1))./max(abs(Tx(:,1))));
 grid on;
-best_plot_ever(f(end/2:end), logTx,"Log. frequency spectrum ", fig)
+best_plot_ever(-f(1:NBins), logTx,"Log. frequency spectrum ", fig)
 
 %% Bubble environment settings
 %  source location constrains a, b
-x_lims=[0 0];
-y_lims=[40 41];
+x_lims=[-0.1 0.1];
+y_lims=[20 20.2];% y_lims=[1.2 1.4];
 z_lims=[0 0];
-Nbubbles=1;
+Nbubbles=1; % 3 test, 30 experiment
 bubbleOsc_lims = [-1,1];
 % minRadius = 1000e-6;
 % minAllowableDistance = max([585e-6, 2 * maxRadius]);
@@ -195,7 +195,7 @@ rx = zeros(nRxSeqLength, NRx);
 noise_level_dB = -50;
 noise_level_linear = 10^(noise_level_dB/10);
 noise_add = randn(nRxSeqLength, NRx) * noise_level_linear; 
-rx = rx + noise_add;
+% rx = rx + noise_add;
 % rx_multi = rx_multi + noise_add;
 
 %% Radius of bubbles
@@ -222,7 +222,7 @@ subplot(211);
 for sb_i = 1: NTargets
     hold on 
     logBs = 10*log10(sigma_bs(1:NBins,sb_i));
-    best_plot_ever(f(end/2:end), logBs,"Log. frequency spectrum, only bubble", fig)
+    best_plot_ever(-f(1:NBins), logBs,"Log. frequency spectrum, only bubble", fig)
     ylim([-200 0])
     hold off
 end
@@ -230,7 +230,7 @@ subplot(212);
 % fig = figure; 
 logFs = 20*log10(abs(f_sigma_bs(:,sb_i))./max(abs(f_sigma_bs(:,sb_i))));
 % ylim([-200 0])
-best_plot_ever(f(end/2:end), logFs,"Log. frequency spectrum, with bubble", fig)
+best_plot_ever(-f(1:NBins), logFs,"Log. frequency spectrum, with bubble", fig)
 ylim([-200 0])
 %% Add bubble response to the received signal
 for iTx = 1:NTx
@@ -278,20 +278,20 @@ plot(abs(H_hat))
 figure;
 subplot(311)
 logTx_noB = 20*log10(abs(Tx(:,1))./max(abs(Tx(:,1))));
-plot(f(end/2:end), logTx_noB(:, 1));
+plot(-f(1:NBins), logTx_noB(:, 1));
 grid on;
 title('Transmitted signal, freq');
 subplot(312)
 logRx_withB = 20*log10(abs(Y(:,1))./max(abs(Y(:,1))));
-plot(f(end/2:end), logRx_withB(:, 1));
+plot(-f(1:NBins), logRx_withB(:, 1));
 grid on;
 hold on
 title('Received signal, freq');
 subplot(313)
 logH_hat = 20*log10(abs(H_hat(:,1))./max(abs(H_hat(:,1))));
-plot(f(end/2:end), logH_hat(:, 1));
+plot(-f(1:NBins), logH_hat(:, 1));
 title('Extracted bubble signal, freq');
-stop
+% stop
 %% Plot receive sequence
 
 fig=figure;
@@ -302,7 +302,7 @@ tSim = linspace(0, nRxSeqLength/fs, nRxSeqLength);
 best_plot_ever(tSim, rx(:,1),"Time domain signal", fig)
 subplot(212);
 grid on;
-best_plot_ever(f(end/2:end), logRx_withB,"Log. frequency spectrum ", fig)
+best_plot_ever(-f(1:NBins), logRx_withB,"Log. frequency spectrum ", fig)
 %% Apply damping: 1/r (linear), 1/r^2 (cylindrical), 1/r^3 (spherical)
 propagationTimesPerSample = (0:nRxSeqLength)./ fs;
 propagationDistancePerSample = propagationTimesPerSample * cWater;
@@ -426,9 +426,10 @@ set(gcf, 'units', 'pixels', 'position', [100 40 1500 900]);
 hold on;
 hold off;
 set(gca,'FontSize',12)
+
  % Capture the plot as an image 
-filename = 'Sonar_Animation2.gif';
-Frame = getframe(sonar_fig);
+% filename = 'Sonar_Animation2.gif';
+% Frame = getframe(sonar_fig);
 % make_gif(Frame, time_step, filename);
 end
 

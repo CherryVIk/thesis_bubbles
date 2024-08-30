@@ -492,7 +492,7 @@ title('Reconstructed correlated, spectrum');
 xlabel('Frequency (Hz)');
 best_plot_ever(fig)
 % saveas(gca, "thesis_pics/multi_scat_50kHz_r"+str_radius+"_reconstruct","png");
-saveas(gca, "thesis_pics/multi_scat_reconstr+noise_corr-set_50kHz_r"+str_radius,"png");
+% saveas(gca, "thesis_pics/multi_scat_reconstr+noise_corr-set_50kHz_r"+str_radius,"png");
 
 
 %% Plot results as PPI (plan position indicator) plot
@@ -511,22 +511,22 @@ colormap('jet');
 view(0,90);
 xlabel('x [m]');
 ylabel('y [m]');
-% axis_limit = 110;
-% clim([-40 0])
-% xlim([-axis_limit axis_limit]); 
-% ylim([0 axis_limit])
+
+clim([-40 0])
+axis_limit = 4;
+xlim([-axis_limit axis_limit]); 
+ylim([0 axis_limit])
 daspect([1 1 1]);
-axis tight
+% axis tight
 shading interp;
 colorbar;
-ax = gca;
 set(gca,'LooseInset',get(gca,'TightInset'));
 set(gcf, 'units', 'pixels', 'position', [100 40 1500 900]);
 hold on;
 hold off;
 best_plot_ever(sonar_fig)
 set(gca,'FontSize',12)
-% saveas(gca, "thesis_pics/multi_scat_50kHz_r"+str_radius+"_sonar-plot","png");
+saveas(gca, "thesis_pics/multi_scat_50kHz_r"+str_radius+"_sonar-plot","png");
 end
 
 %% Functions
